@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas do Deep · Descobertas de James Nestor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --abyss: #040812;
+    --deep: #0a1628;
+    --twilight: #0f2942;
+    --foam: #e8ddc7;
+    --bone: #d4c4a4;
+    --coral: #e26d4a;
+    --amber: #d4a351;
+    --kelp: #3d6b5c;
+    --pearl: #f2ead9;
+    --rule: rgba(232, 221, 199, 0.15);
+    --rule-strong: rgba(232, 221, 199, 0.35);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--abyss);
+    color: var(--foam);
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 400;
+    line-height: 1.55;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Ambient noise texture */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.91 0 0 0 0 0.87 0 0 0 0 0.78 0 0 0 0.08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: overlay;
+    opacity: 0.6;
+  }
+
+  /* Header */
+  header {
+    position: relative;
+    z-index: 2;
+    padding: 48px 6vw 32px;
+    border-bottom: 1px solid var(--rule);
+    background:
+      radial-gradient(ellipse at 30% 0%, rgba(66, 122, 161, 0.25), transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(226, 109, 74, 0.08), transparent 50%);
+  }
+
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .kicker::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--amber), transparent);
+    max-width: 200px;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(56px, 11vw, 168px);
+    font-weight: 300;
+    line-height: 0.88;
+    letter-spacing: -0.04em;
+    font-style: italic;
+    margin-bottom: 24px;
+    font-variation-settings: "opsz" 144;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--coral);
+    font-weight: 500;
+  }
+
+  .subtitle {
+    font-size: clamp(15px, 1.5vw, 19px);
+    line-height: 1.5;
+    max-width: 62ch;
+    color: var(--bone);
+    margin-bottom: 12px;
+  }
+  .attribution {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--amber);
+    opacity: 0.7;
+    letter-spacing: 0.08em;
+  }
+
+  /* Navigation */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(4, 8, 18, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--rule);
+    padding: 16px 6vw;
+  }
+
+  .nav-wrap {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-wrap::-webkit-scrollbar { display: none; }
+
+  .nav-wrap button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--bone);
+    padding: 10px 18px;
+    border-radius: 2px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+  }
+  .nav-wrap button:hover { border-color: var(--amber); color: var(--amber); }
+  .nav-wrap button.active {
+    background: var(--amber);
+    color: var(--abyss);
+    border-color: var(--amber);
+  }
+
+  /* Main content */
+  main {
+    position: relative;
+    z-index: 2;
+    padding: 64px 6vw 120px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Zone entries */
+  .zone {
+    display: none;
+    animation: fadeIn 0.6s ease;
+  }
+  .zone.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .zone-header {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 48px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 64px;
+  }
+
+  @media (max-width: 768px) {
+    .zone-header { grid-template-columns: 1fr; gap: 24px; }
+  }
+
+  .zone-depth {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--amber);
+  }
+  .zone-depth .label {
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 12px;
+  }
+  .zone-depth .range {
+    font-size: clamp(36px, 4.5vw, 64px);
+    font-weight: 300;
+    color: var(--foam);
+    line-height: 1;
+    font-family: 'Fraunces', serif;
+  }
+  .zone-depth .unit {
+    font-size: 14px;
+    color: var(--amber);
+    margin-top: 8px;
+    opacity: 0.8;
+  }
+
+  .zone-title {
+    font-size: clamp(32px, 5vw, 56px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+    margin-bottom: 20px;
+  }
+  .zone-title em {
+    font-style: italic;
+    color: var(--coral);
+    font-weight: 300;
+  }
+  .zone-intro {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--bone);
+    max-width: 60ch;
+  }
+
+  /* Facts grid */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2px;
+    background: var(--rule);
+    margin-bottom: 48px;
+  }
+  .fact {
+    background: var(--abyss);
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .fact .big {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(40px, 5vw, 72px);
+    font-weight: 300;
+    line-height: 0.95;
+    color: var(--coral);
+    letter-spacing: -0.03em;
+  }
+  .fact .big .unit {
+    font-size: 0.35em;
+    color: var(--amber);
+    letter-spacing: 0.1em;
+    margin-left: 4px;
+  }
+  .fact .desc {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--bone);
+  }
+
+  /* Discovery cards */
+  .discoveries {
+    display: grid;
+    gap: 1px;
+    background: var(--rule);
+  }
+
+  .discovery {
+    background: var(--abyss);
+    padding: 40px 32px;
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 40px;
+    transition: background 0.3s ease;
+  }
+  .discovery:hover { background: var(--deep); }
+
+  @media (max-width: 768px) {
+    .discovery { grid-template-columns: 1fr; gap: 16px; padding: 28px 20px; }
+  }
+
+  .discovery-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--amber);
+    line-height: 1.6;
+  }
+  .discovery-meta .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border: 1px solid var(--rule-strong);
+    border-radius: 2px;
+    margin-bottom: 10px;
+    color: var(--bone);
+  }
+
+  .discovery-body h3 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(22px, 2.4vw, 30px);
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin-bottom: 14px;
+    color: var(--foam);
+  }
+  .discovery-body h3 em {
+    font-style: italic;
+    color: var(--coral);
+  }
+  .discovery-body p {
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--bone);
+    margin-bottom: 12px;
+  }
+  .discovery-body p:last-child { margin-bottom: 0; }
+
+  blockquote {
+    border-left: 2px solid var(--coral);
+    padding: 8px 0 8px 20px;
+    margin: 16px 0;
+    font-style: italic;
+    color: var(--pearl);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  /* Intro splash for the first zone */
+  .splash {
+    margin-bottom: 64px;
+    padding: 48px 32px;
+    border: 1px solid var(--rule-strong);
+    border-radius: 2px;
+    background:
+      radial-gradient(ellipse at top right, rgba(226, 109, 74, 0.06), transparent 60%),
+      linear-gradient(135deg, rgba(15, 41, 66, 0.3), transparent);
+  }
+  .splash .epigraph {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: clamp(18px, 2vw, 24px);
+    line-height: 1.45;
+    color: var(--pearl);
+    max-width: 60ch;
+    margin-bottom: 16px;
+  }
+  .splash .source {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--amber);
+  }
+
+  /* Scale marker — visual depth pin */
+  .depth-pin {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    color: var(--amber);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+
+  /* Footer */
+  footer {
+    position: relative;
+    z-index: 2;
+    padding: 48px 6vw;
+    border-top: 1px solid var(--rule);
+    text-align: center;
+    color: var(--bone);
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  footer a { color: var(--amber); text-decoration: none; }
+  footer em { color: var(--coral); font-style: italic; }
+
+  /* Little floating particles for ambiance */
+  .particle {
+    position: fixed;
+    width: 2px;
+    height: 2px;
+    background: var(--foam);
+    border-radius: 50%;
+    opacity: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Atlas interativo · Baseado em <em>Deep</em> de James Nestor</div>
+  <h1>As coisas <em>mais fodas</em><br>que vivem abaixo<br>da superfície.</h1>
+  <p class="subtitle">Um guia navegável das descobertas de James Nestor em <em>Deep: Freediving, Renegade Science, and What the Ocean Tells Us About Ourselves</em> (Houghton Mifflin Harcourt, 2015). Organizado pelas zonas oceânicas e pelos mistérios do corpo humano na água.</p>
+  <p class="attribution">Todo conteúdo é extraído e parafraseado diretamente do livro.</p>
+</header>
+
+<nav>
+  <div class="nav-wrap" id="nav">
+    <button data-zone="fotica" class="active">Zona Fótica</button>
+    <button data-zone="mesopelagica">Mesopelágica</button>
+    <button data-zone="batipelagica">Batipelágica</button>
+    <button data-zone="hadal">Hadal</button>
+    <button data-zone="corpo">O Corpo Humano</button>
+    <button data-zone="cetaceos">Cetáceos</button>
+    <button data-zone="amas">Amas & Ancestrais</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- FÓTICA -->
+<section class="zone active" id="fotica">
+  <div class="zone-header">
+    <div class="zone-depth">
+      <div class="label">Profundidade</div>
+      <div class="range">0 — 180 m</div>
+      <div class="unit">até ~600 pés · onde a luz solar alcança</div>
+    </div>
+    <div>
+      <h1 class="zone-title">Zona <em>Fótica</em></h1>
+      <p class="zone-intro">A casca iluminada do oceano. Estreita em volume, mas responsável por manter a Terra respirável.</p>
+    </div>
+  </div>
+
+  <div class="splash">
+    <p class="epigraph">"A vida nos primeiros trezentos pés do mar é muito parecida com a vida em terra firme — só que há muito mais dela."</p>
+    <p class="source">James Nestor, Deep</p>
+  </div>
+
+  <div class="facts">
+    <div class="fact">
+      <div class="big">2<span class="unit">%</span></div>
+      <div class="desc">do volume total do oceano é ocupado pela zona fótica.</div>
+    </div>
+    <div class="fact">
+      <div class="big">90<span class="unit">%</span></div>
+      <div class="desc">de toda a vida marinha conhecida vive aqui, comprimida nessa camada superficial.</div>
+    </div>
+    <div class="fact">
+      <div class="big">70<span class="unit">%</span></div>
+      <div class="desc">do oxigênio da Terra vem das algas marinhas que só crescem na zona fótica.</div>
+    </div>
+    <div class="fact">
+      <div class="big">98<span class="unit">%</span></div>
+      <div class="desc">da biomassa do oceano são algas — todas confinadas a essa casca de luz.</div>
+    </div>
+  </div>
+
+  <div class="discoveries">
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Definição</span><br>
+        Do grego <em>phōs</em><br>(luz)
+      </div>
+      <div class="discovery-body">
+        <h3>A profundidade da luz é <em>variável</em>, não fixa</h3>
+        <p>Nestor faz questão de marcar que a zona fótica não tem um limite rígido. Em águas turvas de baías próximas à desembocadura de rios, ela pode ir a apenas 12 metros. Em águas tropicais cristalinas, estende-se até cerca de 180 metros. O que define a zona não é uma linha — é a transparência da água e até onde a fotossíntese consegue acontecer.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Respiração do planeta</span>
+      </div>
+      <div class="discovery-body">
+        <h3>Uma casca fininha que sustenta a atmosfera inteira</h3>
+        <p>As algas marinhas — que representam 98% da biomassa oceânica e produzem 70% do oxigênio da Terra — só crescem onde há luz para fotossíntese. Ou seja, essa camada superficial relativamente estreita é o motor de oxigenação do planeta.</p>
+        <blockquote>"Sem ela, não poderíamos respirar." — Nestor</blockquote>
+        <p>Entre 1950 e 2010, o número de espécies de fitoplâncton caiu 40%. Conforme os oceanos esquentam, esse colapso se acelera — e com ele, a capacidade respiratória da biosfera.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Aquarius</span><br>
+        Florida Keys
+      </div>
+      <div class="discovery-body">
+        <h3>O único laboratório submarino operacional do mundo</h3>
+        <p>Nestor visita o Aquarius, laboratório habitado a cerca de 18 metros de profundidade nos Keys, onde aquanautas passam missões de até duas semanas nos "primeiros seis andares do oceano". O lugar é simultaneamente fascinante e precário — em 2005 uma tempestade arrastou o Aquarius, que pesa 300 toneladas, uns 12 pés pelo fundo do mar.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- MESOPELÁGICA -->
+<section class="zone" id="mesopelagica">
+  <div class="zone-header">
+    <div class="zone-depth">
+      <div class="label">Profundidade</div>
+      <div class="range">200 — 1.000 m</div>
+      <div class="unit">650 — 3.300 pés · a zona crepuscular</div>
+    </div>
+    <div>
+      <h1 class="zone-title">Zona <em>Mesopelágica</em></h1>
+      <p class="zone-intro">O crepúsculo oceânico. A luz solar agoniza, a fotossíntese morre, e a vida começa a inventar os próprios truques.</p>
+    </div>
+  </div>
+
+  <div class="facts">
+    <div class="fact">
+      <div class="big">99<span class="unit">%</span></div>
+      <div class="desc">da luz solar já foi absorvida pela água a 240 metros (800 pés).</div>
+    </div>
+    <div class="fact">
+      <div class="big">0,5<span class="unit">%</span></div>
+      <div class="desc">da luz da superfície chega aos 90 metros. A essa profundidade, todas as direções parecem iguais.</div>
+    </div>
+    <div class="fact">
+      <div class="big">15<span class="unit">m</span></div>
+      <div class="desc">é a profundidade em que a cor vermelha deixa de existir para o olho humano.</div>
+    </div>
+  </div>
+
+  <div class="discoveries">
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Espectro</span><br>
+        A cor do oceano
+      </div>
+      <div class="discovery-body">
+        <h3>O mar é azul porque só o azul <em>sobrevive</em></h3>
+        <p>Quando Nestor desce no submarino <em>Idabel</em> pela janela frontal, ele vê bandas de azul ficando cada vez mais escuras — "como uma pintura de Rothko". Não é ilusão óptica. É o espectro solar sendo engolido molécula a molécula.</p>
+        <p>Cores de comprimento de onda longo somem primeiro: <strong>vermelho aos ~15m, amarelo aos ~45m, verde aos ~60m</strong>. Sobram apenas as frequências curtas — azul e roxo. O oceano parece azul porque você está olhando pra uma coluna d'água onde só o azul ainda existe.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Evolução</span><br>
+        Camuflagem invisível
+      </div>
+      <div class="discovery-body">
+        <h3>Por que peixes azuis são raros e vermelhos são comuns</h3>
+        <p>Um peixe azul seria altamente visível nas águas superficiais até chegar na escuridão total da batipelágica. Já um pargo vermelho parece vermelho na superfície, mas conforme desce, a cor "desaparece" — porque o próprio vermelho já saiu do espectro disponível antes de chegar nele. A cerca de 30 metros, fica virtualmente invisível a predadores e presas.</p>
+        <blockquote>É por isso que o pargo-vermelho passa quase toda a vida entre 15 e 60 metros. A evolução descobriu que a camuflagem perfeita em profundidade é escolher uma cor que, lá embaixo, simplesmente não existe mais.</blockquote>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Adaptação sensorial</span>
+      </div>
+      <div class="discovery-body">
+        <h3>Olhos gigantes, eletrorrecepção, bioluminescência</h3>
+        <p>Com menos luz vem menos vida — e quem vive aqui se adapta ao crepúsculo. Peixes evoluem olhos desproporcionalmente grandes para capturar o pouco que resta. Tubarões passam a usar eletromagnetismo para detectar presas. Lulas, microrganismos e bactérias começam a fabricar a própria luz pelo processo químico da bioluminescência.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- BATIPELÁGICA -->
+<section class="zone" id="batipelagica">
+  <div class="zone-header">
+    <div class="zone-depth">
+      <div class="label">Profundidade</div>
+      <div class="range">1.000 — 4.000 m</div>
+      <div class="unit">3.300 — 13.000 pés · a zona da meia-noite</div>
+    </div>
+    <div>
+      <h1 class="zone-title">Zona <em>Batipelágica</em></h1>
+      <p class="zone-intro">A partir daqui, nenhuma luz solar penetra. A vida que existe aqui tem que fabricar a própria luz — e inventou um teatro químico de proporções impensáveis.</p>
+    </div>
+  </div>
+
+  <div class="splash">
+    <p class="epigraph">"A uns 12 metros de distância, parecia que fogos de artifício estavam explodindo no céu noturno."</p>
+    <p class="source">Nestor, descrevendo sua descida a 520m em águas caribenhas</p>
+  </div>
+
+  <div class="facts">
+    <div class="fact">
+      <div class="big">80<span class="unit">—90%</span></div>
+      <div class="desc">da vida oceânica produz alguma forma de bioluminescência — de bactérias a tubarões.</div>
+    </div>
+    <div class="fact">
+      <div class="big">2,5<span class="unit">cm</span></div>
+      <div class="desc">a cada 2.000 anos é a taxa de acúmulo do <em>ooze</em> — a "neve" de esqueletos microscópicos no fundo.</div>
+    </div>
+    <div class="fact">
+      <div class="big">7<span class="unit">°C</span></div>
+      <div class="desc">é a temperatura externa a 760m. Dentro do submarino, o metal congela as paredes.</div>
+    </div>
+  </div>
+
+  <div class="discoveries">
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Idabel</span><br>
+        Karl Stanley<br>
+        Fossa das Cayman
+      </div>
+      <div class="discovery-body">
+        <h3>O submarino construído num quintal em Nova Jersey</h3>
+        <p>Karl Stanley começou a construir seu submarino com peças de encanamento aos 15 anos, no quintal dos pais. Em 1997, sem nenhuma formação em engenharia, tinha projetado e montado manualmente um veículo com o casco de menor deslocamento já construído, pelo custo de US$ 20 mil — cerca de 1% do que custaria com engenheiros profissionais.</p>
+        <p>Por ser uma operação sem licença ou seguro nos EUA, ele mudou as operações para Roatán, em Honduras. Seu <em>Idabel</em> leva turistas a 2.500 pés (760m). Mais de 1.000 descidas, zero mortes, zero ferimentos. Nestor é passageiro dele.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">O mar que queima</span><br>
+        Bioluminescência
+      </div>
+      <div class="discovery-body">
+        <h3>O que os marinheiros antigos chamavam de <em>"burning sea"</em></h3>
+        <p>Quando Stanley desliga as luzes do submarino, o escuro total se enche de flashes. Explosões brancas com pontos de rosa, roxo, verde. Aparecem em todas as direções como vaga-lumes subaquáticos. É bioluminescência — a produção química de luz por organismos vivos.</p>
+        <p>Animais usam essa luz para atrair presas (o peixe-pescador tem uma lanterninha na testa), para assustar predadores, para distrair, e para se comunicar. Lulas gigantes usam flashes brilhantes que podem funcionar como uma espécie de código morse entre elas.</p>
+        <blockquote>Os olhos enormes de lulas e peixes-abissais <em>não evoluíram para captar luz solar — eles nunca verão o sol.</em> Evoluíram para capturar os flashes tênues de outros animais.</blockquote>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Midwater</span><br>
+        O vazio infinito
+      </div>
+      <div class="discovery-body">
+        <h3>O lugar mais solitário que Nestor já viu</h3>
+        <p>Entre a superfície e o fundo, o oceano é simplesmente "midwater". Sem montanhas, sem céu, sem marcos. Nada distingue direita de esquerda, cima de baixo. A noite nunca vira dia. Não há estações. A temperatura é sempre a mesma. Não há casa, destino, ponto de chegada — só deriva constante.</p>
+        <blockquote>"Sinto uma tristeza existencial profunda aqui; é o lugar mais negro e solitário que já vi."</blockquote>
+        <p>Mesmo assim, alguns animais fazem a maior migração da vida na Terra — todo dia, subindo centenas de metros durante o dia para águas mais rasas e voltando ao escuro à noite.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Ooze</span><br>
+        Cemitério da Terra
+      </div>
+      <div class="discovery-body">
+        <h3>Uma nevasca de esqueletos caindo há bilhões de anos</h3>
+        <p>Quando o <em>Idabel</em> pousa a 760 metros, a paisagem é lunar — coberta por uma camada branca que parece neve. Não é. É <em>ooze</em>: o resíduo de cálcio e silício de bilhões de esqueletos microscópicos de plâncton, caindo há éons. Sem sol para derreter, sem vento para soprar, sem chuva para lavar, o ooze fica ali, se acumulando a cerca de 2,5 cm a cada 2.000 anos.</p>
+        <blockquote>"Acabamos de pousar no cemitério mais antigo da Terra."</blockquote>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Fisiologia da escuridão</span>
+      </div>
+      <div class="discovery-body">
+        <h3>Por que tudo aqui embaixo parece um rascunho descartado</h3>
+        <p>Nestor descreve peixes do tamanho de cachorros de colo com pele imitando casca de árvore, enguias-vermelhas andando sobre duas pernas atrofiadas, um tubarão cinza vesgo passando sem pressa. "Parecem experimentos abandonados da cozinha de Deus."</p>
+        <p>Mas a lógica é outra: num mundo sem luz, aparência não importa. O que importa é eficiência. Músculo e osso exigem energia que simplesmente não existe ali. Por isso a maioria tem pele gelatinosa e esqueleto mínimo. Quase nenhum se move — ficam parados, esperando. Alguns viraram hermafroditas para aumentar a chance de acasalar com qualquer um que por acaso passe.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- HADAL -->
+<section class="zone" id="hadal">
+  <div class="zone-header">
+    <div class="zone-depth">
+      <div class="label">Profundidade</div>
+      <div class="range">6.000 — 10.900 m</div>
+      <div class="unit">20.000 — 35.814 pés · do grego Hades</div>
+    </div>
+    <div>
+      <h1 class="zone-title">Zona <em>Hadal</em></h1>
+      <p class="zone-intro">Não é uma camada contínua — é um arquipélago de fossas isoladas no fundo do oceano. Cada uma pode ser um ecossistema único evoluindo em isolamento há milhões de anos.</p>
+    </div>
+  </div>
+
+  <div class="splash">
+    <p class="epigraph">"É como se houvesse um arquipélago de Galápagos enterrado sob oito quilômetros de oceano negro, removido do resto do mundo e desenvolvendo novas formas de vida de maneiras maravilhosas. E elas estão lá há milhões de anos, apenas esperando que acendamos uma luz."</p>
+    <p class="source">Nestor sobre a teoria dos "múltiplos mundos" hadais</p>
+  </div>
+
+  <div class="facts">
+    <div class="fact">
+      <div class="big">1.050<span class="unit">×</span></div>
+      <div class="desc">a pressão da superfície — equivalente a equilibrar a Torre Eiffel na cabeça.</div>
+    </div>
+    <div class="fact">
+      <div class="big">700<span class="unit">+</span></div>
+      <div class="desc">espécies únicas já catalogadas nas fossas hadais.</div>
+    </div>
+    <div class="fact">
+      <div class="big">56<span class="unit">%</span></div>
+      <div class="desc">delas são endêmicas — não existem em nenhum outro lugar do oceano.</div>
+    </div>
+    <div class="fact">
+      <div class="big">3<span class="unit">%</span></div>
+      <div class="desc">das endêmicas são encontradas em mais de uma fossa. Cada fossa é um mundo.</div>
+    </div>
+  </div>
+
+  <div class="discoveries">
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Geografia invertida</span>
+      </div>
+      <div class="discovery-body">
+        <h3>Vire os Himalaias de cabeça para baixo</h3>
+        <p>Nestor usa uma imagem muito boa para explicar a hadal. Imagine um mapa topográfico 3D do mundo — Everest, K2, Kilimanjaro, Mont Blanc. Agora vire esse mapa. Os picos mais altos da Terra, invertidos, viram as fossas mais profundas do oceano.</p>
+        <p>O que une essas fossas como "zona hadal" não é geografia contínua — elas estão espalhadas por todo o globo, separadas por centenas ou milhares de quilômetros de fundo raso. O que as une é a profundidade: todas entre 6.100 e 10.900 metros.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Xenofióforos</span><br>
+        Sirena Deep · 2011
+      </div>
+      <div class="discovery-body">
+        <h3>Amebas gigantes do tamanho do punho de um homem</h3>
+        <p>Em 2011, o microbiologista Doug Bartlett (Scripps) lançou um lander com câmeras na Sirena Deep, na Fossa das Marianas, a cerca de 10.670 metros. Esperavam encontrar camarões e pedras. Encontraram congregações de <em>xenofióforos</em>: amebas gigantes cobertas de apêndices volumosos como babados de camisa de smoking dos anos 70.</p>
+        <blockquote>Cada uma tem mais de 10 cm de largura — e é uma <em>única célula</em>. Sem cérebro, sem sistema nervoso. Mas se moviam, alimentavam-se do detrito milenar, completamente indiferentes aos 1.050 kg/cm² que esmagavam seus corpos.</blockquote>
+        <p>No meio do vídeo, uma água-viva passou — a mais profunda já filmada. Bartlett tinha descoberto o maior organismo unicelular do mundo vivendo no oceano mais profundo do mundo.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Kermadec</span><br>
+        Aberdeen · 2012
+      </div>
+      <div class="discovery-body">
+        <h3>Um camarão albino do tamanho de um gato doméstico</h3>
+        <p>Em 2012, pesquisadores da Universidade de Aberdeen baixaram uma armadilha metálica a 6.700 metros na Fossa de Kermadec, a segunda mais profunda do mundo, perto da Nova Zelândia. Algumas horas depois, puxaram de volta um camarão albino do tamanho de um gato doméstico.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Snailfish</span><br>
+        Aberdeen · 2008
+      </div>
+      <div class="discovery-body">
+        <h3>Peixes gordos e felizes a 7.600 metros</h3>
+        <p>O mesmo grupo escocês descobriu, em 2008, cardumes de <em>snailfish</em> de uns 30 cm abaixo de 7.600 metros. Tinham nadadeiras em forma de asa de pássaro, e em vez de olhos usavam sensores de vibração na cabeça para se orientar.</p>
+        <p>Mas o mais surpreendente era outro detalhe: até então, cientistas imaginavam a hadal como um deserto, e os poucos animais como esquálidos sobreviventes. Os snailfish estavam <strong>"gordos, felizes, nadando animados, interagindo entre si como se fossem membros da mesma família"</strong>. Eram comunidades prósperas, não sobreviventes.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Abandono científico</span>
+      </div>
+      <div class="discovery-body">
+        <h3>O habitat menos investigado do planeta</h3>
+        <p>Apesar de tudo isso, a hadal segue sendo um dos habitats menos estudados da Terra. Segundo Nestor, além da equipe de Bartlett e do grupo de Aberdeen, apenas um punhado — Bartlett contava nos dedos de uma mão — de pesquisadores no mundo tem recursos e interesse para explorar abaixo de 6.000 metros.</p>
+        <p>Cada fossa isolada pode ser, em essência, uma ilha evolutiva independente. Ninguém sabe quantos mundos separados a hadal esconde — porque quase ninguém está olhando.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- CORPO HUMANO -->
+<section class="zone" id="corpo">
+  <div class="zone-header">
+    <div class="zone-depth">
+      <div class="label">Objeto de estudo</div>
+      <div class="range">O corpo humano</div>
+      <div class="unit">Master Switch of Life · Per Scholander, 1963</div>
+    </div>
+    <div>
+      <h1 class="zone-title">O <em>Master Switch</em> of Life</h1>
+      <p class="zone-intro">A série de reflexos fisiológicos que se ativa assim que o rosto humano toca água. Nos transforma, temporariamente, em mamíferos aquáticos eficientes.</p>
+    </div>
+  </div>
+
+  <div class="discoveries">
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Charles Richet</span><br>
+        1894
+      </div>
+      <div class="discovery-body">
+        <h3>Patos que viviam mais debaixo d'água do que no ar</h3>
+        <p>Em 1894, o futuro ganhador do Nobel Charles Richet reuniu patos e amarrou cordas em seus pescoços. Asfixiou metade do grupo no ar aberto; a outra metade, debaixo d'água. Os do ar morreram em 7 minutos. Os da água sobreviveram até 23 minutos. <strong>Privados de oxigênio da mesma maneira, os patos submersos viveram três vezes mais.</strong></p>
+        <p>Richet testou a hipótese do nervo vago, drogou os patos com atropina para desligá-lo, e ainda assim os patos submersos sobreviveram o dobro dos do ar. Havia algo na água, impossível de explicar por lung size, volume de sangue ou nervo vago, que prolongava a vida.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Per Scholander</span><br>
+        1962
+      </div>
+      <div class="discovery-body">
+        <h3>A descoberta do interruptor humano</h3>
+        <p>O fisiologista sueco Per Scholander, trabalhando nos EUA, cunhou o termo <em>Master Switch of Life</em> em 1963. Ele cobria voluntários de eletrodos, fazia-os mergulhar num tanque enorme e media tudo.</p>
+        <p>Resultado: assim que o rosto tocava a água, a frequência cardíaca despencava imediatamente. Mesmo quando ele pedia aos voluntários que se exercitassem intensamente em equipamentos submersos no fundo, <strong>a frequência cardíaca continuava caindo</strong>. O corpo humano reverte sua fisiologia normal debaixo d'água — como foca, como baleia.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Três estágios</span><br>
+        Hanli Prinsloo
+      </div>
+      <div class="discovery-body">
+        <h3>As três fases da apneia extrema</h3>
+        <p>A campeã sul-africana Hanli Prinsloo explicou a Nestor as três respostas sequenciais do corpo durante uma apneia máxima:</p>
+        <p><strong>Primeira fase — convulsões.</strong> Não começam pela falta de oxigênio, mas pelo acúmulo de CO₂. São um aviso: você tem alguns minutos antes de <em>realmente</em> precisar respirar.</p>
+        <p><strong>Segunda fase — o turbo do baço.</strong> O baço libera até 15% de sangue fresco, rico em oxigênio, na corrente sanguínea. Isso normalmente só acontece em estado de choque. Freedivers treinados antecipam essa liberação e a usam como turbo para mergulhar mais fundo.</p>
+        <p><strong>Terceira fase — o blackout.</strong> O cérebro, percebendo que não há oxigênio suficiente, desliga como um interruptor para conservar energia. O cérebro é 2% do peso corporal, mas usa 20% do oxigênio. Se houver líquido na boca ou garganta, a laringe se fecha reflexivamente, impedindo a água de entrar nos pulmões.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Blood shift</span><br>
+        Fisiologia extrema
+      </div>
+      <div class="discovery-body">
+        <h3>O sangue que se acumula no peito para não deixar o pulmão implodir</h3>
+        <p>Nas descidas profundas, a pressão hidrostática comprimiria os pulmões até seu volume residual — onde teoricamente colapsariam. Não é o que acontece. O sangue é redirecionado para a cavidade torácica, preenchendo o espaço que o ar deixou, mantendo coração e pulmões funcionando. O baço encolhe em até um quinto, liberando glóbulos vermelhos extras. Os vasos coronários dilatam. A pele contrai seus vasos.</p>
+        <p>Esse conjunto de adaptações é chamado de <em>blood shift</em>. É literalmente o corpo se reconfigurando, em tempo real, para virar algo diferente do que é em terra.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">O paradoxo</span>
+      </div>
+      <div class="discovery-body">
+        <h3>Por que o reflexo é mais forte na primeira imersão</h3>
+        <p>William Trubridge, um dos maiores freedivers do mundo, descreve em <em>Oxygen</em> uma descoberta contraintuitiva: o reflexo de mergulho é mais agudo na primeira exposição. Por isso ele eliminou aquecimentos antes de apneias máximas — entra "frio" para extrair o máximo do Master Switch.</p>
+        <blockquote>"Assim como em outros reflexos de sobrevivência (como luta ou fuga), foi demonstrado que o reflexo de mergulho mamífero é mais agudo na primeira exposição a uma apneia. Então fazia sentido entrar numa apneia máxima 'a frio'."</blockquote>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Gravidade reversa</span><br>
+        −12m
+      </div>
+      <div class="discovery-body">
+        <h3>A 12 metros, a gravidade se inverte</h3>
+        <p>Abaixo de cerca de 12 metros (40 pés), o freediver para de flutuar para cima — a compressão dos pulmões reduz a flutuabilidade ao ponto em que o corpo é <em>puxado para baixo</em>. É conhecido como <em>free fall</em>. O mergulhador para de nadar, cruza os braços, e literalmente cai em direção ao fundo do oceano. "É como estar no espaço", diz Prinsloo.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- CETÁCEOS -->
+<section class="zone" id="cetaceos">
+  <div class="zone-header">
+    <div class="zone-depth">
+      <div class="label">Foco</div>
+      <div class="range">Cetáceos</div>
+      <div class="unit">Cachalotes, golfinhos · linguagem e cognição</div>
+    </div>
+    <div>
+      <h1 class="zone-title">A Inteligência <em>Alienígena</em> dos Oceanos</h1>
+      <p class="zone-intro">Cachalotes têm o maior cérebro que já existiu na Terra. Golfinhos podem ter nomes próprios. Ambos podem estar se comunicando de maneiras que mal começamos a entender.</p>
+    </div>
+  </div>
+
+  <div class="facts">
+    <div class="fact">
+      <div class="big">6<span class="unit">×</span></div>
+      <div class="desc">maior que o cérebro humano é o cérebro do cachalote — o maior já conhecido na história da Terra.</div>
+    </div>
+    <div class="fact">
+      <div class="big">236<span class="unit">dB</span></div>
+      <div class="desc">o volume dos cliques de cachalote — o animal mais alto do planeta. Mais alto que o ônibus espacial a 250 pés.</div>
+    </div>
+    <div class="fact">
+      <div class="big">15<span class="unit">M</span></div>
+      <div class="desc">anos antes dos humanos, cachalotes já tinham células fusiformes — associadas à empatia, amor, sofrimento e intuição.</div>
+    </div>
+  </div>
+
+  <div class="discoveries">
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Fabrice Schnöller</span><br>
+        DareWin
+      </div>
+      <div class="discovery-body">
+        <h3>O engenheiro que largou tudo para estudar cliques de cachalote</h3>
+        <p>Fabrice Schnöller é um dos protagonistas do livro. Ex-empresário na Ilha de Reunião, ele virou pesquisador independente de linguagem de cetáceos depois de um encontro transformador com cachalotes. Ao contrário dos ~20 cientistas profissionais da área, ele <em>mergulha</em> com os animais.</p>
+        <blockquote>"Jane Goodall não estudou os macacos de avião." — Schnöller, sobre por que a maioria dos pesquisadores de cachalotes nunca vê seus sujeitos na água.</blockquote>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Cliques fractais</span>
+      </div>
+      <div class="discovery-body">
+        <h3>Cliques dentro de cliques dentro de cliques</h3>
+        <p>Os <em>codas</em> — padrões de cliques que cachalotes usam durante socialização — parecem marbles batendo numa mesa de madeira. Mas quando Schnöller os analisa em espectrograma, cada clique contém microcliques, que contêm microcliques menores, desdobrando-se como uma matrioska.</p>
+        <p>Um clique médio dura 24 a 72 milissegundos. Dentro dele, microcliques separados por microssegundos. Os equipamentos de Schnöller, que gravam a 96.000 Hz, não são rápidos o suficiente para captar o próximo nível de detalhe.</p>
+        <blockquote>"A linguagem humana é analógica. A linguagem do cachalote pode ser digital."</blockquote>
+        <p>Cachalotes podem replicar esses padrões no milissegundo exato, repetidamente. Podem também reorganizá-los — como um compositor revisando uma escala — e reproduzi-los em milésimos de segundo.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Cérebro</span><br>
+        Células fusiformes
+      </div>
+      <div class="discovery-body">
+        <h3>Cérebros maiores, mais células da compaixão</h3>
+        <p>O cérebro do cachalote é 6 vezes o humano e, em muitos aspectos, mais complexo. O colículo inferior (percepção de dor, temperatura) é 12 vezes maior. O lemnisco lateral (processamento sonoro) é 250 vezes maior. O neocórtex — parte do cérebro que, em humanos, governa pensamento consciente, planejamento futuro e linguagem — é estimado em 6 vezes maior.</p>
+        <p>Em 2006, pesquisadores da Mount Sinai descobriram que cachalotes têm <strong>células fusiformes</strong> em concentrações muito maiores que as humanas. Essas células são associadas à fala, compaixão, amor, sofrimento e intuição — "aquilo que torna humanos humanos". Os cachalotes desenvolveram essas células <strong>15 milhões de anos antes</strong> de nós.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Sociedade</span><br>
+        Hal Whitehead
+      </div>
+      <div class="discovery-body">
+        <h3>Sociedades multiculturais de baleias</h3>
+        <p>O biólogo canadense Hal Whitehead, que estuda cachalotes há 30 anos, descreve o que chama de "sociedades multiculturais". Cada grupo tem dialetos próprios e comportamentos distintos de grupos vizinhos. Filhotes são criados não só pela mãe, mas por uma unidade matriarcal inteira — tias, avós, primas.</p>
+        <p>As fêmeas ficam na família por toda a vida. Os machos jovens formam "gangues" de adolescentes que vagam pelo oceano, e depois viram solitários que vivem nos oceanos polares, visitando o equador todo ano para cruzar e socializar — "férias de verão", como diz Whitehead.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Nomes próprios</span><br>
+        Golfinhos
+      </div>
+      <div class="discovery-body">
+        <h3>Golfinhos têm nomes — e se apresentam</h3>
+        <p>Golfinhos usam assinaturas de assobio extremamente específicas para se identificar em grupos. Uma mãe golfinho repete o mesmo padrão para o filhote por dias — o que alguns biólogos interpretam como o ato de imprimir um nome. Quando um golfinho se aproxima de outro, ele fala seu nome. Também fala o nome ao se aproximar de humanos.</p>
+        <p>Num experimento de 2008, Schnöller reproduziu sons de golfinhos por um celular à prova d'água no oceano com a filha de 12 anos. Um golfinho, apelidado QuackQuack, parou, fez uma dupla espiada, e respondeu com uma série de assobios agudos. Nos meses seguintes, QuackQuack reconhecia o barco de Schnöller e iniciava conversa.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Comunicação holográfica</span><br>
+        Hipótese
+      </div>
+      <div class="discovery-body">
+        <h3>A ideia mais louca do livro: linguagem visual por som</h3>
+        <p>Schnöller acredita que cachalotes e golfinhos compartilham uma linguagem <em>visual</em> através do som — algo chamado comunicação holográfica. Já que cetáceos constroem imagens sonográficas do ambiente pela ecolocalização, talvez possam <strong>replicar essas imagens e enviá-las a outros cetáceos</strong>, como você manda uma foto pelo celular.</p>
+        <p>A ideia não é nova — em 1974, o cientista russo V. A. Kozak propôs que cachalotes usariam um "sistema vídeo-acústico" para traduzir ecos em imagens. Mas ninguém nunca testou a hipótese.</p>
+        <p>A DareWin está construindo uma "melão artificial" — um painel de 10 hidrofones ligados em série, tentando reconstruir o que o órgão sonográfico dos cetáceos captaria. "A imagem será de baixíssima qualidade — tipo 10 pixels. Mas pode ser suficiente para nos dar uma ideia."</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Tiros sônicos</span>
+      </div>
+      <div class="discovery-body">
+        <h3>Cliques que podem vibrar um corpo humano até a morte</h3>
+        <p>Os cliques dos cachalotes são os sons mais altos produzidos por qualquer animal — até 236 dB. Não podem ser ouvidos no ar (o limite no ar é 194 dB, acima disso o som vira onda de pressão). Na água, o limite é 240 dB, acima do qual o líquido literalmente ferve por cavitação.</p>
+        <p>Os cliques podem explodir tímpanos humanos a centenas de metros de distância. Alguns cientistas estimam que podem vibrar um corpo humano até a morte. A ecolocalização deles detecta uma lula de 25 cm a mais de 300 metros, e um humano a mais de 1,6 km. É o biossonar mais poderoso e preciso já descoberto.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- AMAS -->
+<section class="zone" id="amas">
+  <div class="zone-header">
+    <div class="zone-depth">
+      <div class="label">Cultura & história</div>
+      <div class="range">2.500 anos</div>
+      <div class="unit">Amas do Japão · pérolas caribenhas · gregos antigos</div>
+    </div>
+    <div>
+      <h1 class="zone-title">As <em>Mergulhadoras</em> do Mundo</h1>
+      <p class="zone-intro">Relatos antigos descrevem mergulhos de 15 minutos, a 45 metros, sem equipamento. Muito do que freedivers modernos estão "descobrindo" já era conhecido há milênios — e foi quase totalmente perdido.</p>
+    </div>
+  </div>
+
+  <div class="discoveries">
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Ama</span><br>
+        Japão<br>
+        500 a.C. — presente
+      </div>
+      <div class="discovery-body">
+        <h3>A tradição feminina de 2.500 anos</h3>
+        <p>As <em>ama</em> ("mulheres do mar") descendem de nômades da Ásia central que naufragaram na costa rochosa da Península de Noto por volta de 500 a.C. A terra era estéril — elas se voltaram para o mar. Por razões desconhecidas, apenas as mulheres assumiram o mergulho.</p>
+        <p>Em seu auge no século XIX, as ama eram, em efeito, a maior frota comercial de pesca do mundo. Marinheiros europeus relataram mulheres meio-nuas mergulhando centenas de pés numa única respiração, algumas permanecendo submersas por 15 minutos.</p>
+        <p>Até 60 anos atrás, as ama <strong>não usavam óculos de mergulho</strong> — temiam que isso as desse vantagem injusta sobre outras criaturas do mar. Só começaram a usar roupas de mergulho nos anos 80. Algumas ainda mergulham de topless.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Filosofia</span><br>
+        Fukuyo Manusanke, 82<br>
+        Nishina
+      </div>
+      <div class="discovery-body">
+        <h3>"Só as mulheres entendem o ritmo do mar"</h3>
+        <p>Nestor encontra Fukuyo Manusanke, de 82 anos, uma das últimas 25 ama de Nishina. Quando ele pergunta por que só mulheres, ela responde que não é submissão — é porque, na tradição, só as mulheres entendem os ritmos do mar.</p>
+        <blockquote>"Quando um homem vem ao oceano, ele o explora e o esvazia. Quando uma mulher põe as mãos no oceano, o equilíbrio é restaurado."</blockquote>
+        <p>A ama filosofia: o oceano sempre provê se os humanos colhem em sua forma natural. Pegue o que puder carregar, mas nada além disso. As ama sempre enxergaram o freediving não como esporte, mas como <strong>prática espiritual</strong>.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Segredo</span><br>
+        "Só entre na água"
+      </div>
+      <div class="discovery-body">
+        <h3>A única instrução que Manusanke deu a Nestor</h3>
+        <p>Depois de acompanhar a ama de 82 anos nos mergulhos — com todo seu equipamento italiano de 400 dólares, falhando em ultrapassar 3 metros enquanto ela descia efortlessly a 20 metros — Nestor pergunta pelo intérprete se há algum segredo ancestral que as ama gostariam de dividir.</p>
+        <blockquote>"Você só mergulha. Você só entra na água."</blockquote>
+        <p>Foi a mesma resposta que ele recebeu de Fred Buyle, Hanli Prinsloo, e todos os outros. Não há atalho, nem manual, nem dieta especial. "O segredo de ir fundo", eles pareciam dizer, "está dentro de cada um de nós. Nascemos com ele."</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Lucayos</span><br>
+        Caribe · 1534
+      </div>
+      <div class="discovery-body">
+        <h3>Mergulhos de 15 minutos, documentados por espanhóis</h3>
+        <p>Em 1534, o historiador espanhol Gonzalo Fernández de Oviedo observou os indígenas Lucayos da Ilha Margarita (Caribe) descendo a mais de 30 metros em mergulhos que, segundo suas anotações, duravam <strong>15 minutos</strong>. Segundo Oviedo, centenas de Lucayos compartilhavam essa capacidade — mergulhavam do nascer ao pôr do sol, sete dias por semana, sem parecer se cansar.</p>
+        <p>Em poucos anos, a população inteira dos Lucayos freediving foi dizimada por doença ou escravidão. Os espanhóis trouxeram escravos africanos para substituí-los — os africanos adotaram o freediving rapidamente e, segundo relatos, também mergulhavam a 30 metros prendendo a respiração por até 15 minutos.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">História antiga</span>
+      </div>
+      <div class="discovery-body">
+        <h3>10.000 anos de freediving documentado</h3>
+        <p>Evidências arqueológicas apontam culturas de freediving de até 10.000 anos atrás. Homero, ~700 a.C., descreveu mergulhadores que amarravam pedras pesadas para descer a mais de 30 metros e cortar esponjas do fundo. No século I a.C., o comércio entre Mediterrâneo e Ásia florescia em parte pelo coral vermelho — colhido por freediving abaixo dos 30 metros.</p>
+        <p>No século VIII, vikings mergulhavam sob navios inimigos no Mar do Norte para perfurar seus cascos. Quando Marco Polo visitou o Ceilão no século XIV, viu mergulhadores de pérola descendo 36+ metros em mergulhos de 3 a 4 minutos.</p>
+      </div>
+    </article>
+
+    <article class="discovery">
+      <div class="discovery-meta">
+        <span class="tag">Perda</span>
+      </div>
+      <div class="discovery-body">
+        <h3>Então, de repente: sumiu</h3>
+        <p>No século XX, o cultivo de pérolas e novas tecnologias de pesca tornaram o freediving obsoleto. As habilidades incríveis do corpo humano no oceano e o conhecimento de gerações sobre como acessá-las começaram a desaparecer.</p>
+        <blockquote>"Hoje, mergulhadores competitivos modernos estão redescobrindo a habilidade, mas não são tão bons quanto os antigos, se os relatos históricos forem confiáveis."</blockquote>
+        <p>As culturas antigas sabiam algo que a nossa esqueceu.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>Atlas interativo baseado em <em>Deep: Freediving, Renegade Science, and What the Ocean Tells Us About Ourselves</em>, de James Nestor (Houghton Mifflin Harcourt, 2015).</p>
+  <p style="opacity:0.6; margin-top:8px;">Conteúdo extraído diretamente do livro. Use-o como referência pessoal. Para a experiência completa, leia o original.</p>
+</footer>
+
+<script>
+  const buttons = document.querySelectorAll('#nav button');
+  const zones = document.querySelectorAll('.zone');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.zone;
+      buttons.forEach(b => b.classList.remove('active'));
+      zones.forEach(z => z.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(target).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  // Subtle drifting particles — only on desktop
+  if (window.innerWidth > 900) {
+    for (let i = 0; i < 20; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.top = Math.random() * 100 + 'vh';
+      document.body.appendChild(p);
+
+      const duration = 20 + Math.random() * 30;
+      const delay = Math.random() * 20;
+      p.animate([
+        { opacity: 0, transform: 'translateY(0)' },
+        { opacity: 0.3, transform: 'translateY(-20px)' },
+        { opacity: 0, transform: 'translateY(-40px)' }
+      ], {
+        duration: duration * 1000,
+        delay: delay * 1000,
+        iterations: Infinity
+      });
+    }
+  }
+</script>
+
+</body>
+</html>
